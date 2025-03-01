@@ -54,6 +54,8 @@ function CreatePost() {
                 disabled={isPosting}
               />
             </div>
+
+            
   
             <div className="flex items-center justify-between border-t pt-4">
               <div className="flex space-x-2">
