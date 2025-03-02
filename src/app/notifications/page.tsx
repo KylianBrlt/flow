@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
 import { HeartIcon, MessageCircleIcon, UserPlusIcon } from "lucide-react";
+import Link from "next/link";
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -76,14 +77,16 @@ function NotificationsPage() {
                   }`}
                 >
                   <Avatar className="mt-1">
-                    <AvatarImage src={notification.creator.image ?? "/avatar.png"} />
+                    <Link href={`/profile/${notification.creator.username}`}>
+                      <AvatarImage src={notification.creator.image ?? "/avatar.png"} />
+                    </Link>
                   </Avatar>
                   <div className="flex-1 space-y-1">
                     <div className="flex items-center gap-2">
                       {getNotificationIcon(notification.type)}
                       <span>
                         <span className="font-medium">
-                          {notification.creator.name ?? notification.creator.username}
+                          {notification.creator.name && notification.creator.username}
                         </span>{" "}
                         {notification.type === "FOLLOW"
                           ? "started following you"
