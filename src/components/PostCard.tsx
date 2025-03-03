@@ -1,6 +1,6 @@
 "use client";
 
-import { createComment, deletePost, getPosts, toggleLike } from "@/actions/post.action";
+import { createComment, deletePost, getPosts, toggleLike, deleteComment } from "@/actions/post.action";
 import { SignInButton, useUser } from "@clerk/nextjs";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -12,6 +12,7 @@ import { DeleteAlertDialog } from "./DeleteAlertDialog";
 import { Button } from "./ui/button";
 import { HeartIcon, LogInIcon, MessageCircleIcon, SendIcon } from "lucide-react";
 import { Textarea } from "./ui/textarea";
+import { getYoutubeVideoId } from "@/lib/utils";
 
 type Posts = Awaited<ReturnType<typeof getPosts>>;
 type Post = Posts[number];
@@ -25,6 +26,7 @@ function PostCard({ post, dbUserId }: { post: Post, dbUserId: string | null }) {
     const [hasLiked, setHasLiked] = useState(post.likes.some((like) => like.userId === dbUserId));
     const [optimisticLikes, setOptmisticLikes] = useState(post._count.likes);
     const [showComments, setShowComments] = useState(false);
+    const [isDeletingComment, setIsDeletingComment] = useState<Record<string, boolean>>({});
 
     const handleLike = async () => {
         if (isLiking) return;
@@ -71,6 +73,55 @@ function PostCard({ post, dbUserId }: { post: Post, dbUserId: string | null }) {
         }
     };
 
+    const handleDeleteComment = async (commentId: string) => {
+        try {
+            setIsDeletingComment(prev => ({ ...prev, [commentId]: true }));
+            const result = await deleteComment(commentId);
+            if (result.success) toast.success("Comment deleted successfully");
+            else throw new Error(result.error);
+        } catch (error) {
+            toast.error("Failed to delete comment");
+        } finally {
+            setIsDeletingComment(prev => ({ ...prev, [commentId]: false }));
+        }
+    };
+
+    const renderPostContent = () => {
+        // Check if the content contains a URL
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const urls = post.content?.match(urlRegex);
+
+        if (urls) {
+          // Check if any of the URLs is a YouTube link
+          for (const url of urls) {
+            const videoId = getYoutubeVideoId(url);
+            if (videoId) {
+              return (
+                <>
+                  <p className="mb-4">{post.content}</p>
+                  <div className="relative pb-[56.25%] h-0 overflow-hidden max-w-full mb-4">
+                    <iframe 
+                      className="absolute top-0 left-0 w-full h-full"
+                      width="560" 
+                      height="315" 
+                      src={`https://www.youtube.com/embed/${videoId}`}
+                      title="YouTube video" 
+                      frameBorder="0" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                      referrerPolicy="strict-origin-when-cross-origin" 
+                      allowFullScreen
+                    />
+                  </div>
+                </>
+              );
+            }
+          }
+        }
+        
+        // If no YouTube link, just return the content
+        return <p>{post.content}</p>;
+      };
+
     return (
         <Card className="overflow-hidden">
             <CardContent className="p-4 sm:p-6">
@@ -103,7 +154,9 @@ function PostCard({ post, dbUserId }: { post: Post, dbUserId: string | null }) {
                                     <DeleteAlertDialog isDeleting={isDeleting} onDelete={handleDeletePost} />
                                 )}
                             </div>
-                            <p className="mt-2 text-sm text-foreground break-words">{post.content}</p>
+                            <div className="mt-4">
+                                {renderPostContent()}
+                            </div>
                         </div>
                     </div>
 
@@ -164,15 +217,26 @@ function PostCard({ post, dbUserId }: { post: Post, dbUserId: string | null }) {
                                             <AvatarImage src={comment.author.image ?? "/avatar.png"} />
                                         </Avatar>
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                                <span className="font-medium text-sm">{comment.author.name}</span>
-                                                <span className="text-sm text-muted-foreground">
-                                                    @{comment.author.username}
-                                                </span>
-                                                <span className="text-sm text-muted-foreground">·</span>
-                                                <span className="text-sm text-muted-foreground">
-                                                    {formatDistanceToNow(new Date(comment.createdAt))} ago
-                                                </span>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                                    <span className="font-medium text-sm">{comment.author.name}</span>
+                                                    <span className="text-sm text-muted-foreground">
+                                                        @{comment.author.username}
+                                                    </span>
+                                                    <span className="text-sm text-muted-foreground">·</span>
+                                                    <span className="text-sm text-muted-foreground">
+                                                        {formatDistanceToNow(new Date(comment.createdAt))} ago
+                                                    </span>
+                                                </div>
+                                                {/* Ajouter le bouton de suppression si l'utilisateur est l'auteur du commentaire */}
+                                                {dbUserId === comment.author.id && (
+                                                    <DeleteAlertDialog 
+                                                        isDeleting={isDeletingComment[comment.id] || false} 
+                                                        onDelete={() => handleDeleteComment(comment.id)} 
+                                                        title="Delete Comment"
+                                                        description="Are you sure you want to delete this comment?"
+                                                    />
+                                                )}
                                             </div>
                                             <p className="text-sm break-words">{comment.content}</p>
                                         </div>
