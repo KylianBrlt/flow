@@ -87,16 +87,13 @@ function PostCard({ post, dbUserId }: { post: Post, dbUserId: string | null }) {
     };
 
     const renderPostContent = () => {
-        // Check if the content contains a URL
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         const urls = post.content?.match(urlRegex);
         
         if (urls) {
-          // Check if any of the URLs is a YouTube link
           for (const url of urls) {
             const videoId = getYoutubeVideoId(url);
             if (videoId) {
-              // Remove the YouTube URL from the content
               const contentWithoutYoutubeLink = post.content?.replace(url, '').trim();
               
               return (
@@ -121,7 +118,6 @@ function PostCard({ post, dbUserId }: { post: Post, dbUserId: string | null }) {
           }
         }
         
-        // If no YouTube link, just return the content
         return <p>{post.content}</p>;
       };
 
