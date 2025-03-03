@@ -19,14 +19,17 @@ export function getYoutubeVideoId(url: string): string | null {
 export function getTenorGifId(url: string): string | null {
   if (!url) return null;
   
-  const viewRegex = /tenor\.com\/view\/[\w-]+-gif-(\d+)/;
+  // Match formats like tenor.com/view/... or tenor.com/fr/view/... with gif-ID at the end
+  const viewRegex = /tenor\.com(?:\/\w+)?\/view\/[\w-]+-gif-(\d+)/;
   let match = url.match(viewRegex);
   if (match?.[1]) return match[1];
   
+  // Match formats like tenor.com/bXYZ1.gif
   const shortRegex = /tenor\.com\/(\w+)\.gif/;
   match = url.match(shortRegex);
   if (match?.[1]) return match[1];
   
+  // Match media.tenor.com URLs which contain the ID in path
   const mediaRegex = /media\.tenor\.com\/[\w-]+\/(\w+)(?:-\w+)*\.gif/;
   match = url.match(mediaRegex);
   if (match?.[1]) return match[1];
