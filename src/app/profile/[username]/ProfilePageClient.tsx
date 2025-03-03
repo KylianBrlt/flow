@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import FollowersModal from "@/components/FollowersModal";
 
 type User = Awaited<ReturnType<typeof getProfileByUsername>>;
 type Posts = Awaited<ReturnType<typeof getUserPosts>>;
@@ -51,6 +52,8 @@ function ProfilePageClient({
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [isUpdatingFollow, setIsUpdatingFollow] = useState(false);
+  const [showFollowsModal, setShowFollowsModal] = useState(false);
+  const [followModalType, setFollowModalType] = useState<"followers" | "following">("followers");
 
   const [editForm, setEditForm] = useState({
     name: user.name || "",
@@ -109,12 +112,24 @@ function ProfilePageClient({
                 {/* PROFILE STATS */}
                 <div className="w-full mt-6">
                   <div className="flex justify-between mb-4">
-                    <div>
+                    <div 
+                      className="cursor-pointer hover:bg-muted rounded-md px-3 py-2 transition-colors"
+                      onClick={() => {
+                        setFollowModalType("following");
+                        setShowFollowsModal(true);
+                      }}
+                    >
                       <div className="font-semibold">{user._count.following.toLocaleString()}</div>
                       <div className="text-sm text-muted-foreground">Following</div>
                     </div>
                     <Separator orientation="vertical" />
-                    <div>
+                    <div 
+                      className="cursor-pointer hover:bg-muted rounded-md px-3 py-2 transition-colors"
+                      onClick={() => {
+                        setFollowModalType("followers");
+                        setShowFollowsModal(true);
+                      }}
+                    >
                       <div className="font-semibold">{user._count.followers.toLocaleString()}</div>
                       <div className="text-sm text-muted-foreground">Followers</div>
                     </div>
@@ -273,6 +288,15 @@ function ProfilePageClient({
             </div>
           </DialogContent>
         </Dialog>
+        <FollowersModal
+          open={showFollowsModal}
+          onOpenChange={setShowFollowsModal}
+          userId={user.id}
+          followersCount={user._count.followers}
+          followingCount={user._count.following}
+          isOwnProfile={isOwnProfile}
+          initialTab={followModalType}
+        />
       </div>
     </div>
   );
