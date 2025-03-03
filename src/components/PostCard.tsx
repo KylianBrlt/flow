@@ -13,6 +13,7 @@ import { Button } from "./ui/button";
 import { HeartIcon, LogInIcon, MessageCircleIcon, SendIcon } from "lucide-react";
 import { Textarea } from "./ui/textarea";
 import { getYoutubeVideoId } from "@/lib/utils";
+import { getTenorGifId } from "@/lib/utils";
 
 type Posts = Awaited<ReturnType<typeof getPosts>>;
 type Post = Posts[number];
@@ -92,6 +93,7 @@ function PostCard({ post, dbUserId }: { post: Post, dbUserId: string | null }) {
         
         if (urls) {
           for (const url of urls) {
+            // Check for YouTube videos
             const videoId = getYoutubeVideoId(url);
             if (videoId) {
               const contentWithoutYoutubeLink = post.content?.replace(url, '').trim();
@@ -109,6 +111,29 @@ function PostCard({ post, dbUserId }: { post: Post, dbUserId: string | null }) {
                       frameBorder="0" 
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
                       referrerPolicy="strict-origin-when-cross-origin" 
+                      allowFullScreen
+                    />
+                  </div>
+                </>
+              );
+            }
+            
+            // Check for Tenor GIFs
+            const tenorId = getTenorGifId(url);
+            if (tenorId) {
+              const contentWithoutTenorLink = post.content?.replace(url, '').trim();
+              
+              return (
+                <>
+                  <p className="mb-4">{contentWithoutTenorLink}</p>
+                  <div className="relative overflow-hidden max-w-full mb-4">
+                    <iframe 
+                      className="border-0"
+                      width="100%" 
+                      height="400" 
+                      src={`https://tenor.com/embed/${tenorId}`}
+                      title="Tenor GIF" 
+                      frameBorder="0" 
                       allowFullScreen
                     />
                   </div>
