@@ -90,15 +90,18 @@ function PostCard({ post, dbUserId }: { post: Post, dbUserId: string | null }) {
         // Check if the content contains a URL
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         const urls = post.content?.match(urlRegex);
-
+        
         if (urls) {
           // Check if any of the URLs is a YouTube link
           for (const url of urls) {
             const videoId = getYoutubeVideoId(url);
             if (videoId) {
+              // Remove the YouTube URL from the content
+              const contentWithoutYoutubeLink = post.content?.replace(url, '').trim();
+              
               return (
                 <>
-                  <p className="mb-4">{post.content}</p>
+                  <p className="mb-4">{contentWithoutYoutubeLink}</p>
                   <div className="relative pb-[56.25%] h-0 overflow-hidden max-w-full mb-4">
                     <iframe 
                       className="absolute top-0 left-0 w-full h-full"
