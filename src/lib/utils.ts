@@ -36,3 +36,40 @@ export function getTenorGifId(url: string): string | null {
   
   return null;
 }
+
+// Extract GIPHY GIF URL or ID from various GIPHY URL formats
+export function getGiphyGifInfo(url: string): { url: string | null; id: string | null } {
+  if (!url) return { url: null, id: null };
+
+  // Match formats like media.giphy.com/media/ID/giphy.gif
+  const mediaRegex = /media\d?\.giphy\.com\/media\/([^\/]+)\/[\w.]+/;
+  let match = url.match(mediaRegex);
+  if (match?.[1]) {
+    return { 
+      url: `https://media.giphy.com/media/${match[1]}/giphy.gif`,
+      id: match[1] 
+    };
+  }
+  
+  // Match formats like giphy.com/gifs/ID or giphy.com/gifs/source-ID
+  const gifsRegex = /giphy\.com\/gifs\/(?:[^-]+-)*([a-zA-Z0-9]+)$/;
+  match = url.match(gifsRegex);
+  if (match?.[1]) {
+    return { 
+      url: `https://media.giphy.com/media/${match[1]}/giphy.gif`,
+      id: match[1] 
+    };
+  }
+  
+  // Match direct CDN URLs like media0.giphy.com/media/ID/200.gif
+  const cdnRegex = /media\d?\.giphy\.com\/media\/([^\/]+)\/[\w.]+/;
+  match = url.match(cdnRegex);
+  if (match?.[1]) {
+    return { 
+      url: `https://media.giphy.com/media/${match[1]}/giphy.gif`,
+      id: match[1] 
+    };
+  }
+
+  return { url: null, id: null };
+}

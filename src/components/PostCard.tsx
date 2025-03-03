@@ -12,8 +12,7 @@ import { DeleteAlertDialog } from "./DeleteAlertDialog";
 import { Button } from "./ui/button";
 import { HeartIcon, LogInIcon, MessageCircleIcon, SendIcon, ShieldAlertIcon } from "lucide-react";
 import { Textarea } from "./ui/textarea";
-import { getYoutubeVideoId } from "@/lib/utils";
-import { getTenorGifId } from "@/lib/utils";
+import { getYoutubeVideoId, getTenorGifId, getGiphyGifInfo } from "@/lib/utils";
 
 type Posts = Awaited<ReturnType<typeof getPosts>>;
 type Post = Posts[number];
@@ -138,6 +137,25 @@ function PostCard({ post, dbUserId }: { post: Post, dbUserId: string | null }) {
                       title="Tenor GIF" 
                       frameBorder="0" 
                       allowFullScreen
+                    />
+                  </div>
+                </>
+              );
+            }
+            
+            // Check for GIPHY GIFs
+            const giphyInfo = getGiphyGifInfo(url);
+            if (giphyInfo.url) {
+              const contentWithoutGiphyLink = post.content?.replace(url, '').trim();
+              
+              return (
+                <>
+                  <p className="mb-4">{contentWithoutGiphyLink}</p>
+                  <div className="relative overflow-hidden max-w-full mb-4">
+                    <img 
+                      src={giphyInfo.url} 
+                      alt="GIPHY GIF"
+                      className="max-w-full rounded-md"
                     />
                   </div>
                 </>

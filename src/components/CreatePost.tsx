@@ -5,30 +5,38 @@ import { useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Avatar, AvatarImage } from "./ui/avatar";
 import { Textarea } from "./ui/textarea";
-import { ImageIcon, Loader2Icon, SendIcon } from "lucide-react";
+import {  CirclePlay, ImageIcon, Loader2Icon, Play, PlayIcon, SendIcon, XIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import { createPost } from "@/actions/post.action";
 import toast from "react-hot-toast";
 import ImageUpload from "./ImageUpload";
+import GifPicker from "./GifPicker";
 
 function CreatePost() {
   const { user } = useUser();
   const [content, setContent] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [gifUrl, setGifUrl] = useState("");
   const [isPosting, setIsPosting] = useState(false);
   const [showImageUpload, setShowImageUpload] = useState(false);
+  const [showGifPicker, setShowGifPicker] = useState(false);
 
   const handleSubmit = async () => {
-    if (!content.trim() && !imageUrl) return;
+    if (!content.trim() && !imageUrl && !gifUrl) return;
 
     setIsPosting(true);
     try {
-      const result = await createPost(content, imageUrl);
+      // If we have a GIF, include it in the post content as a URL
+      const finalContent = gifUrl ? `${content} ${gifUrl}` : content;
+      
+      const result = await createPost(finalContent, imageUrl);
       if (result?.success) {
         // reset the form
         setContent("");
         setImageUrl("");
+        setGifUrl("");
         setShowImageUpload(false);
+        setShowGifPicker(false);
 
         toast.success("Post created successfully");
       }
@@ -38,6 +46,11 @@ function CreatePost() {
     } finally {
       setIsPosting(false);
     }
+  };
+
+  const handleGifSelect = (url: string) => {
+    setGifUrl(url);
+    setShowGifPicker(false);
   };
 
   return (
@@ -57,7 +70,32 @@ function CreatePost() {
             />
           </div>
 
-          {(showImageUpload || imageUrl) && (
+          {gifUrl && (
+            <div className="relative">
+              <img 
+                src={gifUrl} 
+                alt="Selected GIF" 
+                className="rounded-md max-h-[200px] object-contain"
+              />
+              <button
+                onClick={() => setGifUrl("")}
+                className="absolute top-2 right-2 p-1 bg-background rounded-full shadow-sm border"
+              >
+                <XIcon className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
+          {showGifPicker && (
+            <div className="h-[400px]">
+              <GifPicker 
+                onGifSelect={handleGifSelect} 
+                onClose={() => setShowGifPicker(false)}
+              />
+            </div>
+          )}
+
+          {(showImageUpload || imageUrl) && !gifUrl && (
             <div className="border rounded-lg p-4">
               <ImageUpload
                 endpoint="postImage"
@@ -72,22 +110,38 @@ function CreatePost() {
 
           <div className="flex items-center justify-between border-t pt-4">
             <div className="flex space-x-2">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-primary"
-                onClick={() => setShowImageUpload(!showImageUpload)}
-                disabled={isPosting}
-              >
-                <ImageIcon className="size-4 mr-2" />
-                Photo
-              </Button>
+              {!gifUrl && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-primary"
+                  onClick={() => setShowImageUpload(!showImageUpload)}
+                  disabled={isPosting || showGifPicker}
+                >
+                  <ImageIcon className="size-4 mr-2" />
+                  Photo
+                </Button>
+              )}
+              
+              {!imageUrl && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-primary"
+                  onClick={() => setShowGifPicker(!showGifPicker)}
+                  disabled={isPosting || showImageUpload}
+                >
+                  <CirclePlay className="size-4 mr-2" />
+                  GIF
+                </Button>
+              )}
             </div>
             <Button
               className="flex items-center"
               onClick={handleSubmit}
-              disabled={(!content.trim() && !imageUrl) || isPosting}
+              disabled={(!content.trim() && !imageUrl && !gifUrl) || isPosting}
             >
               {isPosting ? (
                 <>
