@@ -10,7 +10,7 @@ import { Avatar, AvatarImage } from "./ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { DeleteAlertDialog } from "./DeleteAlertDialog";
 import { Button } from "./ui/button";
-import { HeartIcon, LogInIcon, MessageCircleIcon, SendIcon } from "lucide-react";
+import { HeartIcon, LogInIcon, MessageCircleIcon, SendIcon, ShieldAlertIcon } from "lucide-react";
 import { Textarea } from "./ui/textarea";
 import { getYoutubeVideoId } from "@/lib/utils";
 import { getTenorGifId } from "@/lib/utils";
@@ -28,6 +28,9 @@ function PostCard({ post, dbUserId }: { post: Post, dbUserId: string | null }) {
     const [optimisticLikes, setOptmisticLikes] = useState(post._count.likes);
     const [showComments, setShowComments] = useState(false);
     const [isDeletingComment, setIsDeletingComment] = useState<Record<string, boolean>>({});
+    
+    // Check if current user is the special admin
+    const isAdmin = dbUserId === "cm7qojaw400002z7p0kcr1asg";
 
     const handleLike = async () => {
         if (isLiking) return;
@@ -173,10 +176,24 @@ function PostCard({ post, dbUserId }: { post: Post, dbUserId: string | null }) {
                                         <span>{formatDistanceToNow(new Date(post.createdAt))} ago</span>
                                     </div>
                                 </div>
-                                {/* Check if current user is the post author */}
-                                {dbUserId === post.author.id && (
-                                    <DeleteAlertDialog isDeleting={isDeleting} onDelete={handleDeletePost} />
-                                )}
+                                {/* Action buttons */}
+                                <div className="flex gap-1">
+                                    {/* Admin delete button */}
+                                    {isAdmin && dbUserId !== post.author.id && (
+                                        <DeleteAlertDialog 
+                                            isDeleting={isDeleting} 
+                                            onDelete={handleDeletePost}
+                                            title="Admin Delete"
+                                            description="Delete this post as admin?"
+                                            icon={<ShieldAlertIcon className="size-4 text-red-500" />}
+                                        />
+                                    )}
+                                    
+                                    {/* Regular delete button for post author */}
+                                    {dbUserId === post.author.id && (
+                                        <DeleteAlertDialog isDeleting={isDeleting} onDelete={handleDeletePost} />
+                                    )}
+                                </div>
                             </div>
                             <div className="mt-4">
                                 {renderPostContent()}

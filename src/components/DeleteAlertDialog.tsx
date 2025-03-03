@@ -13,12 +13,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { ReactNode } from "react";
 
 interface DeleteAlertDialogProps {
   isDeleting: boolean;
   onDelete: () => Promise<void>;
   title?: string;
   description?: string;
+  icon?: ReactNode;
 }
 
 export function DeleteAlertDialog({
@@ -26,6 +28,7 @@ export function DeleteAlertDialog({
   onDelete,
   title = "Delete Post",
   description = "This action cannot be undone.",
+  icon,
 }: DeleteAlertDialogProps) {
   return (
     <AlertDialog>
@@ -38,7 +41,7 @@ export function DeleteAlertDialog({
           {isDeleting ? (
             <Loader2Icon className="size-4 animate-spin" />
           ) : (
-            <Trash2Icon className="size-4" />
+            icon || <Trash2Icon className="size-4" />
           )}
         </Button>
       </AlertDialogTrigger>
